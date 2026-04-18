@@ -1,0 +1,17 @@
+{
+  "name": "epic-to-feature-specs",
+  "version": "0.1.0",
+  "description": "Break epic documents into 3-5 implementation-ready feature specs with TypeScript handoff contracts for parallel FE/BE team development. Solves the problem where user stories are too small and epics are too big for AI coding agents.",
+  "author": {
+    "name": "Khang Truong"
+  },
+  "keywords": [
+    "feature-spec",
+    "epic",
+    "decomposition",
+    "fe-be-handoff",
+    "ai-coding",
+    "smart",
+    "typescript-contract"
+  ]
+}

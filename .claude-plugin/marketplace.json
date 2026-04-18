@@ -1,0 +1,27 @@
+{
+  "name": "epic-to-feature-specs",
+  "owner": {
+    "name": "Khang Truong",
+    "url": "https://github.com/studium-ignotum"
+  },
+  "plugins": [
+    {
+      "name": "epic-to-feature-specs",
+      "source": "./",
+      "description": "Break epic documents into 3-5 implementation-ready feature specs with TypeScript handoff contracts for parallel FE/BE team development.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Khang Truong"
+      },
+      "keywords": [
+        "feature-spec",
+        "epic",
+        "decomposition",
+        "fe-be-handoff",
+        "ai-coding",
+        "smart",
+        "typescript-contract"
+      ]
+    }
+  ]
+}
