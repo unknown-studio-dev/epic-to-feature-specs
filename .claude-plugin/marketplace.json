@@ -8,8 +8,8 @@
     {
       "name": "epic-to-feature-specs",
       "source": "./",
-      "description": "Break epic documents into 3-5 implementation-ready feature specs with TypeScript handoff contracts for parallel FE/BE team development.",
-      "version": "0.1.0",
+      "description": "Break epic documents into 3-5 implementation-ready feature specs with TypeScript handoff contracts. Adapts to user personas (PM, tech lead, solo dev), integrates UI designs from Figma/Pencil with mismatch detection, and enforces read-before-write hooks so AI agents never skip reference files.",
+      "version": "0.2.0",
       "author": {
         "name": "Khang Truong"
       },
@@ -20,7 +20,11 @@
         "fe-be-handoff",
         "ai-coding",
         "smart",
-        "typescript-contract"
+        "typescript-contract",
+        "figma",
+        "pencil",
+        "design-integration",
+        "persona"
       ]
     }
   ]
