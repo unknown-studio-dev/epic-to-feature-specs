@@ -91,7 +91,7 @@ Add this repo as a marketplace source in Cowork:
 
 1. Open **Customize** (top-left) → **Plugins** → **Personal** tab
 2. Click the **+** button to add a marketplace
-3. Enter `studium-ignotum/epic-to-feature-specs` and click **Sync**
+3. Enter `unknown-studio-dev/epic-to-feature-specs` and click **Sync**
 4. The plugin appears in your Personal plugins — toggle it on
 
 This keeps the plugin in sync with the latest version from the repo.
@@ -99,21 +99,21 @@ This keeps the plugin in sync with the latest version from the repo.
 ### Claude Code — via marketplace
 
 ```
-/plugin marketplace add studium-ignotum/epic-to-feature-specs
+/plugin marketplace add unknown-studio-dev/epic-to-feature-specs
 /plugin install epic-to-feature-specs@epic-to-feature-specs
 ```
 
 ### Claude Code — manual
 
 ```
-git clone https://github.com/studium-ignotum/epic-to-feature-specs.git
+git clone https://github.com/unknown-studio-dev/epic-to-feature-specs.git
 cd epic-to-feature-specs
 /plugin install ./
 ```
 
 ## Author
 
-Khang Truong — built for the InstaNote project, generalized for any team structure and codebase.
+Khang Truong — generalized for any team structure and codebase.
 
 ## License
 
