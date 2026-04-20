@@ -113,7 +113,7 @@ cd epic-to-feature-specs
 
 ## Author
 
-Khang Truong — generalized for any team structure and codebase.
+Khang Truong — [@keitruong191](https://github.com/keitruong191)
 
 ## License
 
