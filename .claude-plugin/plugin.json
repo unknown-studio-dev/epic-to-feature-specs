@@ -1,16 +1,21 @@
 {
   "name": "epic-to-feature-specs",
-  "version": "0.2.0",
-  "description": "Break epic documents into 3-5 implementation-ready feature specs with TypeScript handoff contracts. Adapts to user personas (PM, tech lead, solo dev), integrates UI designs from Figma/Pencil with mismatch detection, and enforces read-before-write hooks so AI agents never skip reference files.",
+  "version": "0.3.0",
+  "description": "Break epic documents into 3-5 feature specs (team contracts) and optionally further into 3-5 sub-specs per feat spec (shippable PRs sized for AI coding harnesses like hoangsa). Adapts to user personas (PM, tech lead, solo dev), integrates UI designs from Figma/Pencil with mismatch detection, writes sub-specs into Notion via the Notion MCP, emits Plan Split annotations to prevent AI-rot in oversized hoangsa sessions, and enforces read-before-write hooks so AI agents never skip reference files.",
   "author": {
     "name": "Khang Truong"
   },
   "keywords": [
     "feature-spec",
+    "sub-spec",
     "epic",
     "decomposition",
     "fe-be-handoff",
     "ai-coding",
+    "hoangsa",
+    "notion",
+    "plan-split",
+    "stub-first",
     "smart",
     "typescript-contract",
     "figma",

@@ -1,6 +1,8 @@
 # Cutting Strategies
 
-How to decide where the seams in an epic go. Read this whenever you're about to split an epic.
+How to decide where the seams in an epic go. Read this whenever you're about to split an epic into feat specs.
+
+> **Cross-reference:** for cutting a feat spec into sub-specs (the optional Step 11 layer), see `sub-spec-cutting.md`. This file covers only the epic → feat spec layer.
 
 ## Decision tree
 

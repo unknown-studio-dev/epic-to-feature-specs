@@ -2,6 +2,8 @@
 
 Run through this for each spec before calling it done. The most important test is **Measurable-independently** — specs that fail this are the root cause of stuck parallel-team projects.
 
+> **Applies to both layers.** Use this checklist for feat specs AND sub-specs. The Measurable-independently test is identical at both layers — siblings must be mockable, contracts must be typed, no spec waits on another's real implementation.
+
 ## The five checks
 
 ### Specific
@@ -81,3 +83,13 @@ A spec passes if, hand on heart:
 > "If every other spec in this epic disappeared tomorrow, and I had the contract file, I could still implement and verify this spec."
 
 If you can't say yes to that, keep cutting.
+
+## Additional rule for sub-specs
+
+Sub-specs run through the same SMART check, with one addition: **each sub-spec's Out of Scope must explicitly name which sibling sub-spec owns each deferred piece (by sub-spec ID — `7.1.C`, `7.2`, etc.). Anonymous deferrals ("owned by another sub-spec") do not count.**
+
+The sibling-naming rule is what makes the stub-first pattern work — every consumer knows which producer owns the real impl, and every producer knows which consumers depend on its stub being replaced. Anonymous deferrals create the "wait, who's doing this?" coordination ambiguity that the sub-spec layer exists to prevent.
+
+Final gate for sub-specs:
+
+> "If every sibling sub-spec disappeared tomorrow, and I had the parent feat spec + the named stubs to mock, I could still implement and verify this sub-spec."

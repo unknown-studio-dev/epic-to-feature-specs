@@ -1,15 +1,20 @@
 ---
 name: epic-to-feature-specs
-description: Break a large epic doc into implementation-ready feature specs that sit between epic-level goals and story-level detail. Use whenever the user says "break down epic", "split epic", "decompose epic", "write feature specs", "epic → spec", "epic to stories", "make this epic AI-codeable", "spec out this epic", Vietnamese equivalents ("chia epic", "viết spec", "tách epic thành spec"), or complains that stories are too small and epics are too big for AI coding agents. Also trigger when the user uploads an epic doc and asks how to hand it to engineering, or when discussing FE/BE handoff contracts, team-split implementation planning, or SMART decomposition. Adapts to different user personas — non-tech PMs delegating to engineering teams get guided FE/BE splits with handoff contracts, while technical users get flexible splitting options (by service, domain, layer, or custom). Optionally integrates UI designs from Figma or Pencil to ensure FE specs match design system components and screen flows. Produce a small number (default 3, up to 5) of feature specs per epic, each with a TypeScript handoff contract and acceptance criteria — the output is designed to be fed directly to AI coding agents so teams can ship in parallel.
+description: Break a large epic doc into implementation-ready feature specs (team contracts) and optionally further into sub-specs (one shippable PR per sub-spec, sized for an AI coding harness like hoangsa). Use whenever the user says "break down epic", "split epic", "decompose epic", "write feature specs", "write sub-specs", "epic → spec", "epic to stories", "make this epic AI-codeable", "spec out this epic", Vietnamese equivalents ("chia epic", "viết spec", "tách epic thành spec"), or complains that stories are too small and epics are too big for AI coding agents. Also trigger when the user uploads an epic doc and asks how to hand it to engineering, or when discussing FE/BE handoff contracts, team-split implementation planning, SMART decomposition, sub-spec authoring, Notion task tracking, or Plan Split recommendations for hoangsa. Adapts to different user personas — non-tech PMs delegating to engineering teams get guided FE/BE splits with handoff contracts, while technical users get flexible splitting options (by service, domain, layer, or custom). Optionally integrates UI designs from Figma or Pencil to ensure FE specs match design system components and screen flows. Optionally writes sub-specs into Notion via the Notion MCP. Produce a small number (default 3, up to 5) of feature specs per epic, each with a TypeScript handoff contract and acceptance criteria, then optionally decompose each feat spec into 3–5 sub-specs (cap `.A` through `.E`) — the output is designed to be fed directly to AI coding agents so teams can ship in parallel.
 ---
 
 # Epic → Feature Specs
 
 ## What this skill does
 
-Transforms an epic document (a phase-sized goal with many user stories) into **3-5 feature specs** — an intermediate layer between epic and story that is sized for AI coding agents and team-parallel implementation.
+Transforms an epic document (a phase-sized goal with many user stories) into a two-layer decomposition:
 
-The core problem this solves: epics are too big (agent loses the thread, scope creeps, technical decisions drift) and stories are too small (agent implements in isolation, misses shared code paths, re-litigates decisions). A feature spec bundles stories that share an implementation boundary, freezes the technical contracts, and preserves just enough context for a bounded agent session.
+1. **3–5 feature specs** — team-level contracts. One feat spec per team-ownership boundary (FE, BE, mobile, service). Each feat spec freezes the cross-team handoff contract and groups stories that share an implementation boundary.
+2. **Optionally — 3–5 sub-specs per feat spec** (cap `.A` through `.E`) — shippable-PR-level units sized for an AI coding harness like [hoangsa](https://github.com/unknown-studio-dev/hoangsa). Each sub-spec ships one cohesive surface as one PR, written as a Notion page so the team can track it on a board. Sub-specs that exceed the AI's working-context sweet spot (~250k tokens) get a **Plan Split** annotation that hoangsa uses to plan two sequential cook sessions.
+
+The core problem this solves: epics are too big (agent loses the thread, scope creeps, technical decisions drift), feat specs are still too big to hand to a single AI session (the 35-story feat spec doesn't fit one bounded agent run), and stories are too small (agent implements in isolation, misses shared code paths, re-litigates decisions). The sub-spec layer is the missing rung — bundles stories that ship together, freezes the technical contracts at the right level, and preserves just enough context for a bounded agent session.
+
+**Where this skill stops:** the sub-spec layer. Everything below that — `DESIGN-SPEC.md`, `TEST-SPEC.md`, `plan.json`, task context packs — belongs to hoangsa's `/hoangsa:menu` and `/hoangsa:prepare` commands. This skill produces what hoangsa ingests via `EXTERNAL-TASK.md`; it does not duplicate hoangsa's work.
 
 ## Core principles
 
@@ -24,6 +29,10 @@ The core problem this solves: epics are too big (agent loses the thread, scope c
 **5. Adapt to the user, not the other way around.** Different users need different splitting strategies. A non-tech PM delegating to an FE/BE team needs clear ownership boundaries and handoff contracts. A technical lead breaking down their own work needs flexible cuts by service, domain, or value slice. The skill detects which persona is at play and adjusts accordingly.
 
 **6. FE specs must be grounded in designs when available.** If UI designs exist (Figma, Pencil, or other tools), the FE spec must reference them — mapping screens to components, citing design tokens, and linking acceptance criteria to specific design states. This prevents the "technically correct but doesn't match the design" failure mode.
+
+**7. Sub-specs use stub-first as the default cutting principle.** When decomposing a feat spec into sub-specs, the first sub-spec is the structural skeleton — provider chain, navigation root, base services — shipping stubs for everything siblings will fill in. Each later sub-spec replaces stubs from earlier sub-specs without touching the integration site. Every sub-spec's Out of Scope section MUST name its sibling sub-specs by ID (`7.1.C`, `7.2`, etc.) — anonymous deferrals fail SMART independence.
+
+**8. The skill stops at the sub-spec layer; hoangsa owns everything below.** Do not generate `DESIGN-SPEC.md`, `TEST-SPEC.md`, `plan.json`, or task context packs — those are hoangsa's outputs. Do not emit token-budget numbers into Plan Split sections — hoangsa runs `hoangsa-cli budget estimate` for that. The skill's job is to produce the right-shaped input that hoangsa's `/hoangsa:menu` can ingest cleanly via `EXTERNAL-TASK.md`.
 
 ## Workflow
 
@@ -320,6 +329,109 @@ Output to the user, adapted to their persona:
 - Suggested implementation order (which spec to start with)
 - Open questions
 
+### Step 10: Offer sub-spec decomposition
+
+After presenting feat specs, prompt the user whether to decompose them further into sub-specs. Use AskUserQuestion:
+
+> "Your feat specs are ready. Each one is sized as a team contract (~20–35 stories on average). To hand them to an AI coding agent (e.g. [hoangsa](https://github.com/unknown-studio-dev/hoangsa)), each feat spec needs to be decomposed into 3–5 sub-specs — one per shippable PR, ~5–15 stories each, written as a Notion page. Want me to do that now?"
+
+Present options:
+
+- **Yes — decompose all feat specs into sub-specs** (recommended when shipping with hoangsa or a similar harness).
+- **Yes — decompose one feat spec only** (pick which). Useful when only one team uses the harness, or when sizing up the pattern on a single spec first.
+- **No — feat specs are sufficient** (teams will hand-write sub-specs or aren't using a harness yet).
+
+If the user picks "no", stop here. The skill is done.
+
+If the user picks "yes", proceed to Step 11. Before drafting, **read `references/sub-spec-cutting.md`, `references/plan-split-patterns.md`, and `templates/sub-spec.md` in full** so the AI agent has the patterns and the template loaded.
+
+### Step 11: Sub-spec decomposition
+
+For each feat spec the user picked, run the following sub-workflow:
+
+#### 11a — Gather sub-spec context
+
+Ask the remaining context questions via AskUserQuestion:
+
+1. **Notion integration** — Is the Notion MCP connected, and where should sub-spec pages land? Present options:
+   - **Yes — write to Notion database** (provide URL or ID of the destination database/data source). The skill will use `notion-fetch` on that URL first to discover the actual property schema, then `notion-create-pages` to create one page per sub-spec.
+   - **No — markdown files only** (skill writes to repo; user creates Notion cards manually later).
+2. **Sub-spec storage location** — defaults to `<feat-spec storage>/sub-specs/`. Confirm or change.
+3. **Sub-spec naming** — defaults to `spec-X.Y.{letter}-<slug>.md` with `.A` through `.E`. Cap at 5 per feat spec.
+
+#### 11b — Propose sub-spec boundaries (do not write yet)
+
+Read the feat spec's `§3 Scope` subsections, story list, and (if present) `§5 UI Design Reference`. Apply the cutting strategy from `references/sub-spec-cutting.md`:
+
+- **FE feat spec:** apply FE patterns in order — FE-1 (co-shipping coupled foundations as the first sub-spec, always), FE-2 (one sub-spec per coherent user-facing surface), FE-3 (stub-first dependent discipline within FE-2 sub-specs).
+- **BE feat spec:** apply BE patterns — BE-1 (service / domain boundary as default), BE-2 (endpoint cluster when one service is too large).
+- **Small / single-concern feat spec:** apply the fallback — output a single sub-spec with `.A` and note no siblings.
+
+Then propose the boundaries to the user via AskUserQuestion. Present the proposed sub-spec list as: `7.1.A — <scope>`, `7.1.B — <scope>`, etc., with a one-line cohesion rationale for each. Ask: "Does this split look right, or would you like to adjust the boundaries?"
+
+If the user proposes a different cut, accept it. The wrong cut is the most expensive mistake the skill can make at this layer.
+
+If the proposed cut would need 6+ sub-specs to fit the work, escalate to the user: "This feat spec wants 6+ sub-specs. The .A–.E ceiling means we should either split the feat spec itself first, or pick the 5 most cohesive groupings and merge the rest. Which do you prefer?"
+
+#### 11c — Draft each sub-spec
+
+For each sub-spec, use `templates/sub-spec.md` as the starting structure. Fill in:
+
+- **Required top-matter:** `Parent spec` (path + section list of the parent feat spec), `Contracts` (path to consumed contract, or "none consumed directly"), `Stories` (comma-separated story IDs inherited from the parent).
+- **§1 Context** — write a 2–4 sentence cohesion rationale that quotes WHY these stories ship together. If using stub-first, add a sentence naming which stubs from sibling sub-specs this one replaces, and which of its own stubs siblings will replace later.
+- **§2 SMART Outcome** — tight, measurable independently of sibling sub-specs.
+- **§3 Scope (In Scope / Out of Scope)** — concrete file list grouped by feature module. **Out of Scope MUST name every sibling sub-spec by ID** (`7.1.C`, `7.2`, etc.). Anonymous deferrals fail SMART independence.
+- **§4 Design Reference** — only frames this sub-spec touches; inherit tokens from parent §5.3.
+- **§5 Contracts Consumed** — list types imported from `<contract>.ts`. If none, write "No contracts consumed — this sub-spec is structural."
+- **§6 Acceptance Criteria** — flat numbered ACs, each tagged with parent story ID. **REQ-ready format:** hoangsa's `/hoangsa:menu` maps each AC 1:1 to a `[REQ-xx]` marker. Do NOT group ACs under story headings.
+- **§7 Plan Split (only when warranted)** — see 11d.
+- **§8 Dependencies / §9 Test Plan / §10 Decisions Already Made** — fill normally.
+
+#### 11d — Decide if Plan Split is needed (skill-internal trigger)
+
+Run the heuristic from `references/plan-split-patterns.md` (file count × per-type weight). **The heuristic is internal-only — never written into the output.**
+
+If the heuristic sum is clearly above 250k, emit a §7 Plan Split section in the sub-spec, choosing the pattern:
+
+- **FE-Plan (Substrate / Wiring)** — for FE sub-specs with both logic and UI.
+- **BE-Plan-1 (Domain core / Transport)** — default for BE sub-specs.
+- **BE-Plan-2 (Migration / Application)** — when migrations are nontrivial.
+
+If the heuristic is comfortably below the threshold, **omit the §7 Plan Split section entirely.** Absence means "plan as one hoangsa session."
+
+When emitting the Plan Split section, follow the template in `templates/sub-spec.md` §7 exactly. Two rules:
+1. **No token numbers in the output.** Hoangsa is the budget authority.
+2. **Include the Coverage check footer** — the qualifier-overlap pattern (`REQ-11 (logic only)` in Plan-1, `REQ-11 (UI)` in Plan-2) reads as a coverage gap without it.
+
+#### 11e — Write outputs
+
+For each sub-spec:
+
+1. **Write the markdown copy** to `<sub-spec storage>/spec-X.Y.{letter}-<slug>.md`. This is the canonical copy that lives in git.
+2. **Write the Notion page** (if Notion integration was chosen in 11a) using `notion-create-pages`. Discover the database's property schema via `notion-fetch` first; map only properties that actually exist:
+
+   | Default mapping (only if property exists in the database) | Source |
+   |---|---|
+   | Task name | "Spec X.Y.{letter} — <short scope>" |
+   | Description | Sub-spec §1 Context, first sentence |
+   | Effort level | Heuristic from file count: Low (<5), Medium (5–15), High (>15) |
+   | Priority | Inherit from epic, or default High |
+   | Status | Always "Draft" |
+   | Tags | Inherit from parent feat spec team tag |
+   | Task type | Default "Feature request" |
+
+   The page body is the full sub-spec markdown.
+
+#### 11f — Present results
+
+List the sub-spec markdown paths and Notion page URLs. For each sub-spec note:
+
+- Stories covered
+- Whether Plan Split was recommended (and which pattern)
+- One-line "next step": *"Feed this to `/hoangsa:menu` when you're ready to implement."*
+
+Also produce or update the dependency graph (mermaid) to include sub-spec → sub-spec relationships so the team can see the ordering at a glance.
+
 ## Handoff contract: the discipline
 
 When a spec crosses a team boundary, follow these rules to prevent drift (the #1 failure mode of parallel teams):
@@ -344,22 +456,50 @@ See `references/team-split-patterns.md` for variants: FE/BE, FE/BE/Mobile, singl
 - **FE spec that ignores the design** — if designs were provided, every FE acceptance criterion should trace to a design screen or state. "It works but doesn't match the design" is a spec failure.
 - **Design components split across specs with no clear owner** — if two specs render the same component, one must own it (build/export) and the other must consume it. Make this explicit.
 
+### Sub-spec layer anti-patterns
+
+- **ACs grouped under story headings instead of flat-numbered.** Sub-spec §6 must be a flat numbered list (`AC1, AC2, …`) with each AC tagged with its parent story ID. Story-grouped ACs break hoangsa's 1:1 AC → REQ mapping.
+- **Anonymous "owned by another sub-spec" in Out of Scope.** Always name the sibling sub-spec by ID. Fails SMART independence otherwise.
+- **More than 5 sub-specs per feat spec.** Hard ceiling at `.E`. If the work needs 6+ sub-specs, the parent feat spec itself is probably too big — escalate to the user before overflowing.
+- **Skeleton sub-spec that doesn't ship stubs for siblings.** If `.A` omits provider stubs, every subsequent sub-spec (`.B`, `.C`, `.D`, `.E`) has to add the provider chain back to `_layout.tsx`, creating merge conflicts. The skeleton sub-spec MUST ship stubs.
+- **Splitting a single user surface into multiple sub-specs by layer** (e.g., "types and hooks" as Sub-spec X.Y.A and "components" as Sub-spec X.Y.B). That's a **Plan Split** within one sub-spec, not two sub-specs. Sub-specs are shippable PRs; pure-substrate code does not ship alone.
+- **Emitting token numbers in the Plan Split section.** The skill's heuristic is internal-only. Hoangsa's `hoangsa-cli budget estimate` is the authority on tokens — anchoring hoangsa on our number is garbage-in.
+- **Missing the Coverage check footer in a Plan Split section.** The qualifier-overlap pattern (`REQ-11 (logic only)` / `REQ-11 (UI)`) reads as a coverage gap without it.
+- **Generating `DESIGN-SPEC.md`, `TEST-SPEC.md`, or `plan.json`.** Those belong to hoangsa. The skill stops at the sub-spec layer.
+
 ## When to stop
 
-You're done when:
-- Each spec is independently testable (SMART-independent)
+You're done at the **feat-spec layer** when:
+- Each feat spec is independently testable (SMART-independent)
 - Each cross-team boundary has a TypeScript contract (or the user opted out for solo work)
 - The user has reviewed the dependency graph and said "yes this ships in this order"
 - Files are written to the agreed paths
 - If designs were provided: every screen has a spec owner, and every spec's design section is complete
+- Step 10 has been offered (sub-spec decomposition) and the user has either declined or completed Step 11
 
-If the user wants a worked example or a single spec drafted in full detail, offer to draft Spec X.1 end-to-end (the FE-heavy one when teams are split — it's the hardest to get right, so stress-test it first).
+You're done at the **sub-spec layer** (Step 11) when:
+- Each sub-spec is independently shippable (one PR per sub-spec)
+- Each sub-spec's Out of Scope names its sibling sub-specs by ID
+- ACs are flat-numbered and tagged with parent story IDs (REQ-ready)
+- If a Plan Split section was emitted: it names boundaries by REQ + file category (no token numbers) and includes the Coverage check footer
+- Markdown copies are written to `<sub-spec storage>/`; if Notion integration was chosen, Notion pages are created with discovered properties
+- Sub-spec → sub-spec dependency graph is updated
+
+If the user wants a worked example or a single spec drafted in full detail, offer to draft Spec X.1 end-to-end (the FE-heavy one when teams are split — it's the hardest to get right, so stress-test it first). For sub-spec examples, offer to draft Sub-spec X.1.A (the skeleton — same reasoning).
 
 ## References
 
-- `templates/feature-spec.md` — the full spec template (includes UI Design Reference section)
+**Feat-spec layer:**
+- `templates/feature-spec.md` — the full feat spec template (includes UI Design Reference section)
 - `templates/handoff-contract.ts` — TypeScript contract starter
 - `templates/be-handoff-narrative.md` — prose companion for Notion review
-- `references/cutting-strategies.md` — decision tree for how to split an epic (persona-aware)
-- `references/smart-checklist.md` — the SMART-independence validation
+- `references/cutting-strategies.md` — decision tree for cutting epics into feat specs (persona-aware)
 - `references/team-split-patterns.md` — FE/BE, FE/BE/Mobile, single-team, solo-developer variants
+
+**Sub-spec layer (new in v0.3):**
+- `templates/sub-spec.md` — the sub-spec template (mirrors feat spec template, tighter scope, REQ-ready ACs, optional Plan Split section)
+- `references/sub-spec-cutting.md` — decision tree for cutting feat specs into sub-specs (FE / BE / fallback)
+- `references/plan-split-patterns.md` — when and how to emit a Plan Split section for hoangsa
+
+**Shared:**
+- `references/smart-checklist.md` — the SMART-independence validation (applies to both feat specs and sub-specs)
