@@ -2,6 +2,8 @@
 
 Break epic documents into 3-5 implementation-ready feature specs with TypeScript handoff contracts, then optionally decompose each into 3-5 sub-specs sized for AI coding harnesses like [hoangsa](https://github.com/unknown-studio-dev/hoangsa). Adapts to your role — whether you're a PM handing off to engineering, a tech lead decomposing your own work, or a solo dev breaking an epic into AI-codeable chunks.
 
+Works with **Claude Code**, **OpenAI Codex**, and **Google Gemini** out of the box — same workflow, native entry-point per agent (see [Install](#install)).
+
 ## What it does
 
 Takes an epic doc (a grouped set of user stories with a shared goal) and produces a two-layer decomposition:
@@ -22,6 +24,16 @@ After the feat specs are written, the skill optionally decomposes each into:
 7. **Plan Split annotations** — when a sub-spec's logical scope would exceed the ~250k-token AI sweet spot, the skill embeds a substrate/wiring or domain/transport split that hoangsa's `/hoangsa:prepare` honors
 
 Each feat spec and sub-spec passes the SMART independence test: specific scope, measurable with siblings mocked, achievable in one session, relevant to the epic goal, time-bound.
+
+## What's new in v0.4
+
+**Multi-agent support — Codex and Gemini adapters.** The skill now ships with first-class adapters for [OpenAI Codex](https://github.com/openai/codex) (CLI + Cloud) and [Google Gemini](https://github.com/google-gemini/gemini-cli) (CLI + Code Assist) alongside the existing Claude Code plugin. Same 11-step workflow, same templates, same SMART validation — just a native entry-point file per agent (`AGENTS.md` for Codex, `GEMINI.md` for Gemini).
+
+**Agent-agnostic workflow.** The canonical workflow now lives in `adapters/WORKFLOW.md` — Claude-isms stripped (`AskUserQuestion` → plain explicit questions, hardcoded MCP tool names → operation descriptions). Any AI coding agent that reads context files from the working directory can execute it. The Claude Code plugin's `SKILL.md` remains the structured-question version for Claude users.
+
+**One-command install per agent.** A single script (`adapters/install.sh codex|gemini /path/to/project`) copies the workflow + references + templates into your project and wires up the entry file with an idempotent marker block. Re-run any time to pick up upstream updates without touching the rest of your `AGENTS.md` / `GEMINI.md`.
+
+**Why this matters.** Teams rarely standardize on one AI coding agent across an org — engineering uses Claude Code, product uses Codex, design uses Gemini Code Assist, etc. v0.4 means the same epic decomposition discipline travels with the team, not the tool.
 
 ## What's new in v0.3
 
@@ -87,33 +99,46 @@ The skill supports multiple patterns, chosen based on your persona and team stru
 ## What's inside
 
 ```
-skills/epic-to-feature-specs/
-  SKILL.md                              # Core workflow + principles (11 steps)
+skills/epic-to-feature-specs/             # Claude Code plugin (native skill)
+  SKILL.md                                # Core workflow + principles (11 steps)
   templates/
-    feature-spec.md                     # Feat-spec template (includes UI Design Reference section)
-    sub-spec.md                         # Sub-spec template (REQ-ready ACs, optional Plan Split)  [v0.3]
-    handoff-contract.ts                 # TypeScript contract starter
-    be-handoff-narrative.md             # Prose companion for Notion review
+    feature-spec.md                       # Feat-spec template (includes UI Design Reference section)
+    sub-spec.md                           # Sub-spec template (REQ-ready ACs, optional Plan Split)  [v0.3]
+    handoff-contract.ts                   # TypeScript contract starter
+    be-handoff-narrative.md               # Prose companion for Notion review
   references/
-    cutting-strategies.md               # Persona-aware decision tree (epic → feat specs)
-    sub-spec-cutting.md                 # FE / BE / fallback patterns (feat spec → sub-specs)  [v0.3]
-    plan-split-patterns.md              # When + how to emit a Plan Split section for hoangsa  [v0.3]
-    smart-checklist.md                  # SMART independence validation (both layers)
-    team-split-patterns.md              # All 7 team split patterns (A-G)
+    cutting-strategies.md                 # Persona-aware decision tree (epic → feat specs)
+    sub-spec-cutting.md                   # FE / BE / fallback patterns (feat spec → sub-specs)  [v0.3]
+    plan-split-patterns.md                # When + how to emit a Plan Split section for hoangsa  [v0.3]
+    smart-checklist.md                    # SMART independence validation (both layers)
+    team-split-patterns.md                # All 7 team split patterns (A-G)
+
+adapters/                                 # Codex + Gemini adapters  [v0.4]
+  README.md                               # Adapter overview + layout
+  WORKFLOW.md                             # Agent-agnostic workflow (de-Claude'd SKILL.md)
+  install.sh                              # One-command install for either agent
+  codex/
+    AGENTS.md                             # Codex entry-point snippet (loaded automatically)
+    INSTALL.md                            # Codex-specific install + troubleshooting
+  gemini/
+    GEMINI.md                             # Gemini entry-point snippet (loaded automatically)
+    INSTALL.md                            # Gemini-specific install + troubleshooting
 
 .claude-plugin/
-  plugin.json                           # Plugin metadata (v0.3.0)
-  marketplace.json                      # Marketplace listing
+  plugin.json                             # Plugin metadata (v0.4.0)
+  marketplace.json                        # Marketplace listing
   hooks/
-    hooks.json                          # Hook wiring (PostToolUse + PreToolUse)
+    hooks.json                            # Hook wiring (PostToolUse + PreToolUse)
     scripts/
-      track-read.sh                     # Tracks reads of critical skill files
-      check-gate.sh                     # Blocks writes until all files are read
+      track-read.sh                       # Tracks reads of critical skill files
+      check-gate.sh                       # Blocks writes until all files are read
 ```
 
 ## Install
 
-### Cowork (recommended)
+### Claude Code
+
+#### Cowork (recommended)
 
 Add this repo as a marketplace source in Cowork:
 
@@ -124,20 +149,40 @@ Add this repo as a marketplace source in Cowork:
 
 This keeps the plugin in sync with the latest version from the repo.
 
-### Claude Code — via marketplace
+#### Via marketplace
 
 ```
 /plugin marketplace add unknown-studio-dev/epic-to-feature-specs
 /plugin install epic-to-feature-specs@epic-to-feature-specs
 ```
 
-### Claude Code — manual
+#### Manual
 
 ```
 git clone https://github.com/unknown-studio-dev/epic-to-feature-specs.git
 cd epic-to-feature-specs
 /plugin install ./
 ```
+
+### Codex (CLI + Cloud)  [v0.4]
+
+```
+git clone https://github.com/unknown-studio-dev/epic-to-feature-specs.git
+cd epic-to-feature-specs
+./adapters/install.sh codex /path/to/your/project
+```
+
+The script copies the workflow + references + templates into `<your project>/.epic-to-feature-specs/`, then creates or updates `AGENTS.md` at the project root with a managed marker block. Idempotent — re-run any time to pull updates. See [`adapters/codex/INSTALL.md`](adapters/codex/INSTALL.md) for manual install + troubleshooting.
+
+### Gemini (CLI + Code Assist)  [v0.4]
+
+```
+git clone https://github.com/unknown-studio-dev/epic-to-feature-specs.git
+cd epic-to-feature-specs
+./adapters/install.sh gemini /path/to/your/project
+```
+
+Same flow as Codex, but installs `GEMINI.md` at the project root. See [`adapters/gemini/INSTALL.md`](adapters/gemini/INSTALL.md) for details.
 
 ## Author
 
