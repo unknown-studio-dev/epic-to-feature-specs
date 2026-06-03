@@ -3,18 +3,12 @@
 # PostToolUse hook for Read — logs when critical skill files are read.
 # Creates/updates a tracking file so check-gate.sh can enforce read-before-write.
 #
-# Tier 1 — base files (always required by check-gate.sh):
+# Critical files for epic-to-feature-specs:
 #   1. SKILL.md (the main skill instructions)
 #   2. references/cutting-strategies.md
 #   3. references/team-split-patterns.md
 #   4. references/smart-checklist.md
 #   5. templates/feature-spec.md
-#
-# Tier 2 — sub-spec files (required by check-gate.sh only when the Write target
-#                          looks like a sub-spec — see check-gate.sh for matching):
-#   6. references/sub-spec-cutting.md
-#   7. references/plan-split-patterns.md
-#   8. templates/sub-spec.md
 #
 # Fail-open: if anything goes wrong (no jq, bad JSON, etc.), exit 0 silently.
 
@@ -61,12 +55,10 @@ TRACK_FILE="/tmp/skill-gate-epic-specs-${SESSION_ID}.json"
 # Create tracking file with all flags false if it doesn't exist yet.
 # This is the "gate activation" moment — reading any skill file turns the gate on.
 if [[ ! -f "$TRACK_FILE" ]]; then
-  echo '{"skill_md":false,"cutting_strategies":false,"team_split_patterns":false,"smart_checklist":false,"feature_spec_template":false,"sub_spec_cutting":false,"plan_split_patterns":false,"sub_spec_template":false}' > "$TRACK_FILE"
+  echo '{"skill_md":false,"cutting_strategies":false,"team_split_patterns":false,"smart_checklist":false,"feature_spec_template":false}' > "$TRACK_FILE"
 fi
 
 # --- Set flags based on what was read ---
-
-# Tier 1 — base files
 
 # Flag: SKILL.md
 if [[ "$FILE_PATH" == "${SKILL_DIR}/SKILL.md" ]]; then
@@ -95,26 +87,6 @@ fi
 # Flag: feature-spec.md template
 if [[ "$FILE_PATH" == "${SKILL_DIR}/templates/feature-spec.md" ]]; then
   UPDATED="$(jq '.feature_spec_template = true' "$TRACK_FILE")"
-  echo "$UPDATED" > "$TRACK_FILE"
-fi
-
-# Tier 2 — sub-spec files (new in v0.3)
-
-# Flag: sub-spec-cutting.md
-if [[ "$FILE_PATH" == "${SKILL_DIR}/references/sub-spec-cutting.md" ]]; then
-  UPDATED="$(jq '.sub_spec_cutting = true' "$TRACK_FILE")"
-  echo "$UPDATED" > "$TRACK_FILE"
-fi
-
-# Flag: plan-split-patterns.md
-if [[ "$FILE_PATH" == "${SKILL_DIR}/references/plan-split-patterns.md" ]]; then
-  UPDATED="$(jq '.plan_split_patterns = true' "$TRACK_FILE")"
-  echo "$UPDATED" > "$TRACK_FILE"
-fi
-
-# Flag: sub-spec.md template
-if [[ "$FILE_PATH" == "${SKILL_DIR}/templates/sub-spec.md" ]]; then
-  UPDATED="$(jq '.sub_spec_template = true' "$TRACK_FILE")"
   echo "$UPDATED" > "$TRACK_FILE"
 fi
 
